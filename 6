@@ -1,0 +1,22 @@
+function analyzeImage() {
+  const file = imageUpload.files[0];
+  const formData = new FormData();
+  formData.append("image", file);
+
+  fetch("/analyze", {
+    method: "POST",
+    body: formData
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.error) {
+        alert(data.error);
+      } else {
+        console.log("Landmarks detectados:", data.landmarks);
+        // Aqui você pode processar os landmarks e fazer sugestões de rostos
+      }
+    })
+    .catch((error) => {
+      console.error("Erro ao analisar a imagem:", error);
+    });
+}
