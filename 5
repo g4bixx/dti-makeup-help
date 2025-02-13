@@ -1,0 +1,44 @@
+import cv2
+import dlib
+import numpy as np
+from flask import Flask, request, jsonify
+from io import BytesIO
+from PIL import Image
+
+app = Flask(__name__)
+
+# Carregar o modelo pré-treinado de detecção facial
+detector = dlib.get_frontal_face_detector()
+predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
+
+@app.route('/analyze', methods=['POST'])
+def analyze_image():
+    # Receber a imagem enviada pelo frontend
+    img_file = request.files['image']
+    img = Image.open(img_file)
+    img = np.array(img)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # Detectar faces na imagem
+    faces = detector(gray)
+    if len(faces) == 0:
+        return jsonify({"error": "Nenhuma face detectada."})
+
+    face_landmarks = []
+    for face in faces:
+        landmarks = predictor(gray, face)
+        face_landmarks.append(landmarks)
+
+    # Aqui você pode processar os landmarks para sugerir os rostos
+    # Por enquanto, estamos apenas retornando os pontos detectados
+    landmarks_data = []
+    for landmarks in face_landmarks:
+        points = []
+        for i in range(68):
+            points.append((landmarks.part(i).x, landmarks.part(i).y))
+        landmarks_data.append(points)
+
+    return jsonify({"landmarks": landmarks_data})
+
+if __name__ == '__main__':
+    app.run(debug=True)
